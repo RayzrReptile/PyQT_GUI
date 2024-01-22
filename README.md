@@ -1,6 +1,13 @@
 # PyQT GUI
 This repository hosts information, resources, and code about the Pythonic GUI toolkit PyQT. This toolkit serves as the preferred GUI platform for a senior design project at Florida Atlantic University that focusses on the evaluation and implementation of off-the-shelf software-defined radios (SDRs). The main repository for hosting phased array beamforming code and resources can be found [here](https://github.com/ADolbyB/sdr-beamforming) under Joel Brigida, a group member for the project out of five.
 
+<div align="center">
+    <p>
+        Mockup of GUI made from QT Designer:
+    </p>
+<img src="./assets/GUI_initial_mockup.png" alt="GUI Mockup" width="500"/><br>
+</div>
+
 ## QT Designer Resources
 QT Designer is a GUI development platform included in the QT package. QT also comes with an application development platform known as QT Creator that uses QT Designer as a sub-program, but for the purposes of this project, our group exclusively used the former. 
 - [QT Homepage](https://www.qt.io/)
