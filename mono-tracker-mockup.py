@@ -47,10 +47,14 @@ class Ui_MainWindow(object):
         text = self.toggleTrackerButton.text()
         if text == 'Tracking: ON':
             self.toggleTrackerButton.setText("Tracking: OFF")
-            return False
+            self.RxDial.setEnabled(True)
+            self.TxDial.setEnabled(True)
+            self.phaseCalibration.setEnabled(True)
         elif text == 'Tracking: OFF':
             self.toggleTrackerButton.setText("Tracking: ON")
-            return True
+            self.RxDial.setEnabled(False)
+            self.TxDial.setEnabled(False)
+            self.phaseCalibration.setEnabled(False)
         
     def getToggle(self):
         text = self.toggleTrackerButton.text()
@@ -60,12 +64,21 @@ class Ui_MainWindow(object):
             return False
 
     def adjustRX(self):
-        currentValue = self.RxDial.value()
-        self.labelRxGain.setText(str(currentValue))
+        rxVal = self.RxDial.value()
+        self.labelRxGain.setText(str(rxVal))
+
+    def getRXGain(self):
+        return self.RxDial.value()
 
     def adjustTX(self):
-        currentValue = self.TxDial.value()
-        self.labelTxGain.setText(str(currentValue))
+        txVal = self.TxDial.value()
+        self.labelTxGain.setText(str(txVal))
+
+    def getTXGain(self):
+        return self.TxDial.value()
+
+    def getPhaseCal(self):
+        return self.phaseCalibration.value()
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -82,20 +95,27 @@ class Ui_MainWindow(object):
         self.RxDial.setGeometry(QtCore.QRect(140, 440, 91, 81))
         self.RxDial.setObjectName("RxDial")
         self.RxDial.setValue(60)
+        self.RxDial.setMinimum(0)
+        self.RxDial.setMaximum(60)
         self.RxDial.valueChanged.connect(self.adjustRX)
+        self.RxDial.setEnabled(False)
 
         self.TxDial = QtWidgets.QDial(self.centralwidget)
         self.TxDial.setGeometry(QtCore.QRect(240, 440, 91, 81))
         self.TxDial.setObjectName("TxDial")
         self.TxDial.setValue(0)
+        self.TxDial.setMinimum(0)
+        self.TxDial.setMaximum(60)
         self.TxDial.valueChanged.connect(self.adjustTX)
+        self.TxDial.setEnabled(False)
 
         self.phaseCalibration = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.phaseCalibration.setGeometry(QtCore.QRect(350, 480, 101, 31))
         self.phaseCalibration.setMinimum(-180.0)
         self.phaseCalibration.setMaximum(180.0)
-        self.phaseCalibration.setSingleStep(0.5)
+        self.phaseCalibration.setSingleStep(1.0)
         self.phaseCalibration.setObjectName("phaseCalibration")
+        self.phaseCalibration.setEnabled(False)
 
         self.labelPhaseCal = QtWidgets.QLabel(self.centralwidget)
         self.labelPhaseCal.setGeometry(QtCore.QRect(350, 460, 121, 16))
@@ -214,8 +234,10 @@ rx_gain1 = 60
 tx_lo = rx_lo
 tx_gain = 0
 fc0 = int(200e3)
-phase_cal = 100
+phase_cal = 0
 tracking_length = 1000
+signal_start = int(NumSamples*(samp_rate/2+fc0/2)/samp_rate)
+signal_end = int(NumSamples*(samp_rate/2+fc0*2)/samp_rate)
 
 ''' Set distance between Rx antennas '''
 d_wavelength = 0.5                  # distance between elements as a fraction of wavelength.  This is normally 0.5
@@ -223,41 +245,45 @@ wavelength = 3E8/rx_lo              # wavelength of the RF carrier
 d = d_wavelength*wavelength         # distance between elements in meters
 print("Set distance between Rx Antennas to ", int(d*1000), "mm")
 
-'''Create Radios'''
+''' Create Radio '''
 sdr = adi.ad9361(uri='ip:192.168.2.1')
 
-'''Configure properties for the Rx Pluto'''
-sdr.rx_enabled_channels = [0, 1]
-sdr.sample_rate = int(samp_rate)
-sdr.rx_rf_bandwidth = int(fc0*3)
-sdr.rx_lo = int(rx_lo)
-sdr.gain_control_mode = rx_mode
-sdr.rx_hardwaregain_chan0 = int(rx_gain0)
-sdr.rx_hardwaregain_chan1 = int(rx_gain1)
-sdr.rx_buffer_size = int(NumSamples)
-sdr._rxadc.set_kernel_buffers_count(1)   # set buffers to 1 (instead of the default 4) to avoid stale data on Pluto
-sdr.tx_rf_bandwidth = int(fc0*3)
-sdr.tx_lo = int(rx_lo)
-sdr.tx_cyclic_buffer = True
-sdr.tx_hardwaregain_chan0 = int(tx_gain)
-sdr.tx_hardwaregain_chan1 = int(-88)
-sdr.tx_buffer_size = int(2**18)
+''' Configure properties for the Rx Pluto '''
+def setupPluto(samp_rate, fc0, rx_lo, rx_mode, rx_gain0, rx_gain1, NumSamples, tx_lo, tx_gain):
+    sdr.rx_enabled_channels = [0, 1]
+    sdr.sample_rate = int(samp_rate)
+    sdr.rx_rf_bandwidth = int(fc0*3)
+    sdr.rx_lo = int(rx_lo)
+    sdr.gain_control_mode = rx_mode
+    sdr.rx_hardwaregain_chan0 = int(rx_gain0)
+    sdr.rx_hardwaregain_chan1 = int(rx_gain1)
+    sdr.rx_buffer_size = int(NumSamples)
+    sdr._rxadc.set_kernel_buffers_count(1)   # set buffers to 1 (instead of the default 4) to avoid stale data on Pluto
+    sdr.tx_rf_bandwidth = int(fc0*3)
+    sdr.tx_lo = int(tx_lo) #make same as rx_lo
+    sdr.tx_cyclic_buffer = True
+    sdr.tx_hardwaregain_chan0 = int(tx_gain)
+    sdr.tx_hardwaregain_chan1 = int(-88)
+    sdr.tx_buffer_size = int(2**18)
 
-'''Program Tx and Send Data'''
-fs = int(sdr.sample_rate)
-N = 2**16
-ts = 1 / float(fs)
-t = np.arange(0, N * ts, ts)
-i0 = np.cos(2 * np.pi * t * fc0) * 2 ** 14
-q0 = np.sin(2 * np.pi * t * fc0) * 2 ** 14
-iq0 = i0 + 1j * q0
-sdr.tx([iq0,iq0])  # Send Tx data.
+setupPluto(samp_rate, fc0, rx_lo, rx_mode, rx_gain0, rx_gain1, NumSamples, tx_lo, tx_gain)
 
-# Assign frequency bins and "zoom in" to the fc0 signal on those frequency bins
-xf = np.fft.fftfreq(NumSamples, ts)
-xf = np.fft.fftshift(xf)/1e6
-signal_start = int(NumSamples*(samp_rate/2+fc0/2)/samp_rate)
-signal_end = int(NumSamples*(samp_rate/2+fc0*2)/samp_rate)
+''' Program Tx and Send Data '''
+def programTX(sdr):
+    fs = int(sdr.sample_rate)
+    N = 2**16
+    ts = 1 / float(fs)
+    t = np.arange(0, N * ts, ts)
+    i0 = np.cos(2 * np.pi * t * fc0) * 2 ** 14
+    q0 = np.sin(2 * np.pi * t * fc0) * 2 ** 14
+    iq0 = i0 + 1j * q0
+    sdr.tx([iq0,iq0])  # Send Tx data.
+
+    # Assign frequency bins and "zoom in" to the fc0 signal on those frequency bins
+    xf = np.fft.fftfreq(NumSamples, ts)
+    xf = np.fft.fftshift(xf)/1e6
+
+programTX(sdr)
 
 def calcTheta(phase):
     # calculates the steering angle for a given phase delta (phase is in deg)
@@ -334,19 +360,19 @@ def Tracking(last_delay):
         new_delay = last_delay + phase_step
     return new_delay
 
-'''Setup Main UI Window'''
+''' Setup Main UI Window '''
 app = QtWidgets.QApplication(sys.argv)
 MainWindow = QtWidgets.QMainWindow()
 ui = Ui_MainWindow()
 ui.setupUi(MainWindow)
 MainWindow.show()
 
-'''Setup All Windows'''
+''' Setup All Windows '''
 p1  = ui.setupTrackerGraph(tracking_length)
 p2 = ui.setupFirstGraph()
 p3 = ui.setupSecondGraph()
 
-'''Collect Data'''
+''' Collect Data '''
 for i in range(20):  
     # let Pluto run for a bit, to do all its calibrations
     data = sdr.rx()
@@ -358,6 +384,7 @@ tracking_angles = np.ones(tracking_length)*180
 tracking_angles[:-1] = -180   # make a line across the plot when tracking begins
 
 curve1 = p1.plot(tracking_angles)
+
 def update_tracker():
     global tracking_angles, delay
     delay = Tracking(delay)
@@ -365,11 +392,54 @@ def update_tracker():
     tracking_angles = tracking_angles[1:]
     curve1.setData(tracking_angles, np.arange(tracking_length))
 
+# Initial Condition
+init = False
+
+''' Application Loop '''
 def runTracker():
-    global ui
+    global ui, init, sdr, tx_gain, rx_gain0, phase_cal
+
     toggle = ui.getToggle()
+    newRX = ui.getRXGain()
+    newTX = ui.getTXGain()
+    newPhaseCal = ui.getPhaseCal()
+
+    # If toggle is on to continue tracker
     if toggle:
+        # If change has occured to Pluto variables
+        if init:
+            print("Restart Pluto")
+            sdr.tx_destroy_buffer()
+
+            sdr = adi.ad9361(uri='ip:192.168.2.1')
+            setupPluto(samp_rate, fc0, rx_lo, rx_mode, rx_gain0, rx_gain0, NumSamples, tx_lo, tx_gain)
+            # Same as main monopulse initialization
+            for i in range(20):  
+                data = sdr.rx()
+            delay_phases, peak_dbfs, peak_delay, steer_angle, peak_sum, peak_delta, monopulse_phase = scan_for_DOA()
+            delay = peak_delay
+            tracking_angles = np.ones(tracking_length)*180
+            tracking_angles[:-1] = -180
+            curve1 = p1.plot(tracking_angles)
+            init = False
         update_tracker()
+    else:
+        # If Rx Dial is changed
+        if newRX != rx_gain0:
+            rx_gain0 = int(newRX)
+            init = True
+        
+        # If Tx Dial is changed
+        # Note: tx_hardwaregain_chan0 does not accept arguments greater than 1. Documentation as to its limits is unclear
+        if newTX != tx_gain:
+            # tx_gain = int(newTX)
+            print("Currently N/A")
+            init = True
+        
+        # If Phase Calibration is changed
+        if newPhaseCal != phase_cal:
+            phase_cal = newPhaseCal
+            init = True
     
 timer = pg.QtCore.QTimer()
 timer.timeout.connect(runTracker)
