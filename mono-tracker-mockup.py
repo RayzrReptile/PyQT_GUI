@@ -194,7 +194,7 @@ rx_gain1 = 60
 tx_lo = rx_lo
 tx_gain = 0
 fc0 = int(200e3)
-phase_cal = 20
+phase_cal = 100
 tracking_length = 1000
 
 ''' Set distance between Rx antennas '''
