@@ -43,70 +43,97 @@ print(f'sys.path = {sys.path}')
 
 '''Define UI Window Class'''
 class Ui_MainWindow(object):
+    def toggleTracker(self):
+        text = self.toggleTrackerButton.text()
+        if text == 'Tracking: ON':
+            self.toggleTrackerButton.setText("Tracking: OFF")
+            return False
+        elif text == 'Tracking: OFF':
+            self.toggleTrackerButton.setText("Tracking: ON")
+            return True
+        
+    def getToggle(self):
+        text = self.toggleTrackerButton.text()
+        if text == 'Tracking: ON':
+            return True
+        elif text == 'Tracking: OFF':
+            return False
+
+    def adjustRX(self):
+        currentValue = self.RxDial.value()
+        self.labelRxGain.setText(str(currentValue))
+
+    def adjustTX(self):
+        currentValue = self.TxDial.value()
+        self.labelTxGain.setText(str(currentValue))
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+
         self.trackerView = GraphicsLayoutWidget(self.centralwidget)
         self.trackerView.setGeometry(QtCore.QRect(20, 20, 511, 401))
-        self.trackerView.setObjectName("trackerWidget")
-        self.dial1 = QtWidgets.QDial(self.centralwidget)
-        self.dial1.setGeometry(QtCore.QRect(20, 450, 91, 91))
-        self.dial1.setObjectName("dial1")
-        self.dial2 = QtWidgets.QDial(self.centralwidget)
-        self.dial2.setGeometry(QtCore.QRect(120, 450, 91, 91))
-        self.dial2.setObjectName("dial2")
-        self.slider2 = QtWidgets.QSlider(self.centralwidget)
-        self.slider2.setGeometry(QtCore.QRect(230, 510, 160, 22))
-        self.slider2.setOrientation(QtCore.Qt.Horizontal)
-        self.slider2.setObjectName("slider2")
-        self.slider1 = QtWidgets.QSlider(self.centralwidget)
-        self.slider1.setGeometry(QtCore.QRect(230, 460, 160, 22))
-        self.slider1.setOrientation(QtCore.Qt.Horizontal)
-        self.slider1.setObjectName("slider1")
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(230, 490, 161, 20))
-        self.label.setObjectName("label")
-        self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(230, 440, 161, 16))
-        self.label_2.setObjectName("label_2")
-        self.doubleSpinBox = QtWidgets.QDoubleSpinBox(self.centralwidget)
-        self.doubleSpinBox.setGeometry(QtCore.QRect(420, 500, 81, 31))
-        self.doubleSpinBox.setObjectName("doubleSpinBox")
-        self.label_3 = QtWidgets.QLabel(self.centralwidget)
-        self.label_3.setGeometry(QtCore.QRect(420, 480, 81, 16))
-        self.label_3.setObjectName("label_3")
-        self.label_4 = QtWidgets.QLabel(self.centralwidget)
-        self.label_4.setGeometry(QtCore.QRect(30, 440, 81, 16))
-        self.label_4.setObjectName("label_4")
-        self.label_5 = QtWidgets.QLabel(self.centralwidget)
-        self.label_5.setGeometry(QtCore.QRect(130, 440, 71, 16))
-        self.label_5.setObjectName("label_5")
+        self.trackerView.setObjectName("trackerView")
+
+        self.RxDial = QtWidgets.QDial(self.centralwidget)
+        self.RxDial.setGeometry(QtCore.QRect(140, 440, 91, 81))
+        self.RxDial.setObjectName("RxDial")
+        self.RxDial.setValue(60)
+        self.RxDial.valueChanged.connect(self.adjustRX)
+
+        self.TxDial = QtWidgets.QDial(self.centralwidget)
+        self.TxDial.setGeometry(QtCore.QRect(240, 440, 91, 81))
+        self.TxDial.setObjectName("TxDial")
+        self.TxDial.setValue(0)
+        self.TxDial.valueChanged.connect(self.adjustTX)
+
+        self.phaseCalibration = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.phaseCalibration.setGeometry(QtCore.QRect(350, 480, 101, 31))
+        self.phaseCalibration.setMinimum(-180.0)
+        self.phaseCalibration.setMaximum(180.0)
+        self.phaseCalibration.setSingleStep(0.5)
+        self.phaseCalibration.setObjectName("phaseCalibration")
+
+        self.labelPhaseCal = QtWidgets.QLabel(self.centralwidget)
+        self.labelPhaseCal.setGeometry(QtCore.QRect(350, 460, 121, 16))
+        self.labelPhaseCal.setObjectName("labelPhaseCal")
+
+        self.labelDial1 = QtWidgets.QLabel(self.centralwidget)
+        self.labelDial1.setGeometry(QtCore.QRect(150, 430, 71, 16))
+        self.labelDial1.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelDial1.setObjectName("labelDial1")
+
+        self.labelDial2 = QtWidgets.QLabel(self.centralwidget)
+        self.labelDial2.setGeometry(QtCore.QRect(250, 430, 71, 16))
+        self.labelDial2.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelDial2.setObjectName("labelDial2")
+
         self.firstWidget = GraphicsLayoutWidget(self.centralwidget)
         self.firstWidget.setGeometry(QtCore.QRect(545, 20, 231, 201))
         self.firstWidget.setObjectName("firstWidget")
+
         self.secondWidget = GraphicsLayoutWidget(self.centralwidget)
         self.secondWidget.setGeometry(QtCore.QRect(545, 230, 231, 191))
         self.secondWidget.setObjectName("secondWidget")
-        self.dropdown1 = QtWidgets.QComboBox(self.centralwidget)
-        self.dropdown1.setGeometry(QtCore.QRect(530, 460, 131, 22))
-        self.dropdown1.setObjectName("dropdown1")
-        self.dropdown1.addItem("")
-        self.dropdown1.addItem("")
-        self.dropdown1.addItem("")
-        self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(530, 440, 131, 16))
-        self.label_6.setObjectName("label_6")
-        self.dropdown2 = QtWidgets.QComboBox(self.centralwidget)
-        self.dropdown2.setGeometry(QtCore.QRect(530, 510, 131, 22))
-        self.dropdown2.setObjectName("dropdown2")
-        self.dropdown2.addItem("")
-        self.dropdown2.addItem("")
-        self.dropdown2.addItem("")
-        self.label_7 = QtWidgets.QLabel(self.centralwidget)
-        self.label_7.setGeometry(QtCore.QRect(530, 490, 131, 16))
-        self.label_7.setObjectName("label_7")
+
+        self.toggleTrackerButton = QtWidgets.QPushButton(self.centralwidget)
+        self.toggleTrackerButton.setGeometry(QtCore.QRect(20, 440, 111, 91))
+        self.toggleTrackerButton.setObjectName("toggleTrackerButton")
+        self.toggleTrackerButton.clicked.connect(self.toggleTracker)
+
+        self.labelRxGain = QtWidgets.QLabel(self.centralwidget)
+        self.labelRxGain.setGeometry(QtCore.QRect(150, 520, 71, 16))
+        self.labelRxGain.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelRxGain.setObjectName("labelRxGain")
+
+        self.labelTxGain = QtWidgets.QLabel(self.centralwidget)
+        self.labelTxGain.setGeometry(QtCore.QRect(250, 520, 71, 16))
+        self.labelTxGain.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelTxGain.setObjectName("labelTxGain")
+
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 26))
@@ -135,24 +162,17 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.label.setText(_translate("MainWindow", "Slider 2"))
-        self.label_2.setText(_translate("MainWindow", "Slider 1"))
-        self.label_3.setText(_translate("MainWindow", "Spin Box"))
-        self.label_4.setText(_translate("MainWindow", "Dial 1"))
-        self.label_5.setText(_translate("MainWindow", "Dial 2"))
-        self.dropdown1.setItemText(0, _translate("MainWindow", "Item 1"))
-        self.dropdown1.setItemText(1, _translate("MainWindow", "Item 2"))
-        self.dropdown1.setItemText(2, _translate("MainWindow", "Item 3"))
-        self.label_6.setText(_translate("MainWindow", "Dropdown 1"))
-        self.dropdown2.setItemText(0, _translate("MainWindow", "Item 1"))
-        self.dropdown2.setItemText(1, _translate("MainWindow", "Item 2"))
-        self.dropdown2.setItemText(2, _translate("MainWindow", "Item 3"))
-        self.label_7.setText(_translate("MainWindow", "Dropdown 1"))
+        self.labelPhaseCal.setText(_translate("MainWindow", "Phase Calibration"))
+        self.labelDial1.setText(_translate("MainWindow", "Rx Gain"))
+        self.labelDial2.setText(_translate("MainWindow", "Tx Gain"))
+        self.toggleTrackerButton.setText(_translate("MainWindow", "Tracking: ON"))
+        self.labelRxGain.setText(_translate("MainWindow", "60"))
+        self.labelTxGain.setText(_translate("MainWindow", "0"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.actionThis_is_an_option.setText(_translate("MainWindow", "This is an option"))
         self.actionA_second_option.setText(_translate("MainWindow", "A second option"))
         self.actionAnd_so_on.setText(_translate("MainWindow", "And so on"))
-
+    
     def setupTrackerGraph(self, tracking_length):
         p1 = self.trackerView.addPlot()
         p1.setXRange(-80,80)
@@ -344,9 +364,15 @@ def update_tracker():
     tracking_angles = np.append(tracking_angles, calcTheta(delay))
     tracking_angles = tracking_angles[1:]
     curve1.setData(tracking_angles, np.arange(tracking_length))
+
+def runTracker():
+    global ui
+    toggle = ui.getToggle()
+    if toggle:
+        update_tracker()
     
 timer = pg.QtCore.QTimer()
-timer.timeout.connect(update_tracker)
+timer.timeout.connect(runTracker)
 timer.start(0)
 
 if __name__ == "__main__":
