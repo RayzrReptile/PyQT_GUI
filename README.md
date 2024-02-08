@@ -3,9 +3,9 @@ This repository hosts information, resources, and code about the Pythonic GUI to
 
 <div align="center">
     <p>
-        Mockup of GUI made from QT Designer:
+        Rx Steering GUI made from QT Designer:
     </p>
-<img src="./assets/GUI_initial_mockup.png" alt="GUI Mockup" width="500"/><br>
+<img src="./assets/RxGUI_Capture.png" alt="Rx Steering GUI" width="500"/><br>
 </div>
 
 ## QT Designer Resources
